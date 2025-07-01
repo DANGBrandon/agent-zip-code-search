@@ -2,8 +2,12 @@
 /**
  * Plugin Name: Advanced Search and Filter - Brandon
  * Description: Provides advanced search functionality across Toolset custom post types.
- * Version: 0.1.0
- * Author: Brandon
+
+ * Plugin URI: https://example.com/advanced-search-filter-brandon
+ * Version: 2.2.1
+ * Author: DANG Brandon
+ * Author URI: https://dangdesigns.com
+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,7 +40,7 @@ class ASF_Brandon_Plugin {
         $selected_type = $options['post_type'] ?? key( $post_types );
         $available_meta = $this->get_meta_keys( $selected_type );
         $selected_fields = is_array( $options['fields'] ?? '' ) ? $options['fields'] : [];
-=======
+        $search_fields   = is_array( $options['search_fields'] ?? '' ) ? $options['search_fields'] : ['zip','radius'];
 
         ?>
         <div class="wrap">
@@ -68,10 +72,25 @@ class ASF_Brandon_Plugin {
                                     </label>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-=======
-                        <th scope="row"><label for="fields">Fields to Display (comma separated meta keys)</label></th>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Search Fields</th>
                         <td>
-                            <input type="text" name="<?php echo $this->option_name; ?>[fields]" value="<?php echo esc_attr( $options['fields'] ?? '' ); ?>" class="regular-text" />
+                            <?php
+                            $available_search = [
+                                'name'   => 'Name Search',
+                                'zip'    => 'Zip Code',
+                                'radius' => 'Search Radius',
+                                'state'  => 'State',
+                            ];
+                            foreach ( $available_search as $slug => $label ) : ?>
+                                <label style="display:block;margin-bottom:4px;">
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[search_fields][]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( in_array( $slug, $search_fields, true ) ); ?> />
+                                    <?php echo esc_html( $label ); ?>
+                                </label>
+                            <?php endforeach; ?>
 
                         </td>
                     </tr>
@@ -84,23 +103,34 @@ class ASF_Brandon_Plugin {
 
     public function search_form_shortcode() {
         $radius_options = [ 0 => 'Exact', 5 => '5 miles', 10 => '10 miles', 25 => '25 miles', 50 => '50 miles' ];
-        $states = $this->get_states();
+        $states        = $this->get_states();
+        $options       = get_option( $this->option_name );
+        $search_fields = is_array( $options['search_fields'] ?? '' ) ? $options['search_fields'] : ['zip','radius'];
         ob_start();
         ?>
         <form method="get" class="asfb-search-form">
-            <input type="text" name="asfb_name" placeholder="Name" value="<?php echo esc_attr( $_GET['asfb_name'] ?? '' ); ?>" />
-            <input type="text" name="asfb_zip" placeholder="Zip Code" value="<?php echo esc_attr( $_GET['asfb_zip'] ?? '' ); ?>" />
-            <select name="asfb_radius">
-                <?php foreach ( $radius_options as $val => $label ) : ?>
-                    <option value="<?php echo esc_attr( $val ); ?>" <?php selected( $_GET['asfb_radius'] ?? '', $val ); ?>><?php echo esc_html( $label ); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <select name="asfb_state">
-                <option value="">State</option>
-                <?php foreach ( $states as $abbr => $name ) : ?>
-                    <option value="<?php echo esc_attr( $abbr ); ?>" <?php selected( $_GET['asfb_state'] ?? '', $abbr ); ?>><?php echo esc_html( "$name ($abbr)" ); ?></option>
-                <?php endforeach; ?>
-            </select>
+            <?php if ( in_array( 'name', $search_fields, true ) ) : ?>
+                <input type="text" name="asfb_name" placeholder="Name" value="<?php echo esc_attr( $_GET['asfb_name'] ?? '' ); ?>" />
+            <?php endif; ?>
+            <?php if ( in_array( 'zip', $search_fields, true ) ) : ?>
+                <input type="text" name="asfb_zip" placeholder="Zip Code" value="<?php echo esc_attr( $_GET['asfb_zip'] ?? '' ); ?>" />
+            <?php endif; ?>
+            <?php if ( in_array( 'radius', $search_fields, true ) ) : ?>
+                <select name="asfb_radius">
+                    <?php foreach ( $radius_options as $val => $label ) : ?>
+                        <option value="<?php echo esc_attr( $val ); ?>" <?php selected( $_GET['asfb_radius'] ?? '', $val ); ?>><?php echo esc_html( $label ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+            <?php if ( in_array( 'state', $search_fields, true ) ) : ?>
+                <select name="asfb_state">
+                    <option value="">State</option>
+                    <?php foreach ( $states as $abbr => $name ) : ?>
+                        <option value="<?php echo esc_attr( $abbr ); ?>" <?php selected( $_GET['asfb_state'] ?? '', $abbr ); ?>><?php echo esc_html( "$name ($abbr)" ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+
             <button type="submit">Search</button>
             <a href="<?php echo esc_url( remove_query_arg( [ 'asfb_name', 'asfb_zip', 'asfb_radius', 'asfb_state', 'paged' ] ) ); ?>">Clear All</a>
         </form>
@@ -113,9 +143,6 @@ class ASF_Brandon_Plugin {
         $post_type = $options['post_type'] ?? 'post';
 
         $fields = is_array( $options['fields'] ?? '' ) ? array_map( 'trim', $options['fields'] ) : [];
-=======
-        $fields = array_map( 'trim', explode( ',', $options['fields'] ?? '' ) );
-
         $paged = max( 1, intval( $_GET['paged'] ?? 1 ) );
         $args = [
             'post_type' => $post_type,
@@ -195,7 +222,6 @@ class ASF_Brandon_Plugin {
                 if ( has_post_thumbnail( $post_id ) ) {
                     echo get_the_post_thumbnail( $post_id, 'medium' );
                 }
-
                 foreach ( $fields as $field ) {
                     $value = get_post_meta( $post_id, $field, true );
                     if ( is_array( $value ) ) {
@@ -203,15 +229,6 @@ class ASF_Brandon_Plugin {
                     }
                     echo '<p>' . esc_html( $value ) . '</p>';
                 }
-=======
-                $first = get_post_meta( $post_id, 'wpcf-first-name', true );
-                $middle = get_post_meta( $post_id, 'wpcf-middle-name', true );
-                $last = get_post_meta( $post_id, 'wpcf-last-name', true );
-                $email = get_post_meta( $post_id, 'wpcf-email', true );
-                $phone = get_post_meta( $post_id, 'wpcf-phone', true );
-                echo '<p>' . esc_html( trim( "$first $middle $last" ) ) . '</p>';
-                echo '<p>' . esc_html( $email ) . '</p>';
-                echo '<p>' . esc_html( $phone ) . '</p>';
 
                 echo '</div>';
             }
@@ -261,7 +278,6 @@ class ASF_Brandon_Plugin {
         return $earth_radius * $c;
     }
 
-
     private function get_meta_keys( $post_type ) {
         global $wpdb;
         $sql = $wpdb->prepare(
@@ -270,8 +286,6 @@ class ASF_Brandon_Plugin {
         );
         return $wpdb->get_col( $sql );
     }
-
-=======
 
     private function get_states() {
         return [
@@ -338,8 +352,4 @@ function asfb_enqueue_styles() {
     wp_enqueue_style( 'asfb-styles', plugin_dir_url( __FILE__ ) . 'asfb-styles.css' );
 }
 add_action( 'wp_enqueue_scripts', 'asfb_enqueue_styles' );
-
-
-=======
-?>
 
