@@ -3,7 +3,7 @@
  * Plugin Name: Advanced Search and Filter - Brandon
  * Description: Provides advanced search functionality across Toolset custom post types.
  * Plugin URI: https://example.com/advanced-search-filter-brandon
- * Version: 0.1.1
+ * Version: 0.1.2
  * Author: Brandon
  * Author URI: https://example.com
  */
@@ -37,6 +37,7 @@ class ASF_Brandon_Plugin {
         $selected_type = $options['post_type'] ?? key( $post_types );
         $available_meta = $this->get_meta_keys( $selected_type );
         $selected_fields = is_array( $options['fields'] ?? '' ) ? $options['fields'] : [];
+        $search_fields   = is_array( $options['search_fields'] ?? '' ) ? $options['search_fields'] : ['zip','radius'];
         ?>
         <div class="wrap">
             <h1>Advanced Search &amp; Filter - Brandon</h1>
@@ -68,6 +69,24 @@ class ASF_Brandon_Plugin {
                             <?php endif; ?>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row">Search Fields</th>
+                        <td>
+                            <?php
+                            $available_search = [
+                                'name'   => 'Name Search',
+                                'zip'    => 'Zip Code',
+                                'radius' => 'Search Radius',
+                                'state'  => 'State',
+                            ];
+                            foreach ( $available_search as $slug => $label ) : ?>
+                                <label style="display:block;margin-bottom:4px;">
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[search_fields][]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( in_array( $slug, $search_fields, true ) ); ?> />
+                                    <?php echo esc_html( $label ); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </td>
+                    </tr>
                 </table>
                 <?php submit_button(); ?>
             </form>
@@ -77,23 +96,33 @@ class ASF_Brandon_Plugin {
 
     public function search_form_shortcode() {
         $radius_options = [ 0 => 'Exact', 5 => '5 miles', 10 => '10 miles', 25 => '25 miles', 50 => '50 miles' ];
-        $states = $this->get_states();
+        $states        = $this->get_states();
+        $options       = get_option( $this->option_name );
+        $search_fields = is_array( $options['search_fields'] ?? '' ) ? $options['search_fields'] : ['zip','radius'];
         ob_start();
         ?>
         <form method="get" class="asfb-search-form">
-            <input type="text" name="asfb_name" placeholder="Name" value="<?php echo esc_attr( $_GET['asfb_name'] ?? '' ); ?>" />
-            <input type="text" name="asfb_zip" placeholder="Zip Code" value="<?php echo esc_attr( $_GET['asfb_zip'] ?? '' ); ?>" />
-            <select name="asfb_radius">
-                <?php foreach ( $radius_options as $val => $label ) : ?>
-                    <option value="<?php echo esc_attr( $val ); ?>" <?php selected( $_GET['asfb_radius'] ?? '', $val ); ?>><?php echo esc_html( $label ); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <select name="asfb_state">
-                <option value="">State</option>
-                <?php foreach ( $states as $abbr => $name ) : ?>
-                    <option value="<?php echo esc_attr( $abbr ); ?>" <?php selected( $_GET['asfb_state'] ?? '', $abbr ); ?>><?php echo esc_html( "$name ($abbr)" ); ?></option>
-                <?php endforeach; ?>
-            </select>
+            <?php if ( in_array( 'name', $search_fields, true ) ) : ?>
+                <input type="text" name="asfb_name" placeholder="Name" value="<?php echo esc_attr( $_GET['asfb_name'] ?? '' ); ?>" />
+            <?php endif; ?>
+            <?php if ( in_array( 'zip', $search_fields, true ) ) : ?>
+                <input type="text" name="asfb_zip" placeholder="Zip Code" value="<?php echo esc_attr( $_GET['asfb_zip'] ?? '' ); ?>" />
+            <?php endif; ?>
+            <?php if ( in_array( 'radius', $search_fields, true ) ) : ?>
+                <select name="asfb_radius">
+                    <?php foreach ( $radius_options as $val => $label ) : ?>
+                        <option value="<?php echo esc_attr( $val ); ?>" <?php selected( $_GET['asfb_radius'] ?? '', $val ); ?>><?php echo esc_html( $label ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+            <?php if ( in_array( 'state', $search_fields, true ) ) : ?>
+                <select name="asfb_state">
+                    <option value="">State</option>
+                    <?php foreach ( $states as $abbr => $name ) : ?>
+                        <option value="<?php echo esc_attr( $abbr ); ?>" <?php selected( $_GET['asfb_state'] ?? '', $abbr ); ?>><?php echo esc_html( "$name ($abbr)" ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
             <button type="submit">Search</button>
             <a href="<?php echo esc_url( remove_query_arg( [ 'asfb_name', 'asfb_zip', 'asfb_radius', 'asfb_state', 'paged' ] ) ); ?>">Clear All</a>
         </form>

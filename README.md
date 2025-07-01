@@ -7,6 +7,7 @@ This repository contains a simple WordPress plugin that provides an advanced sea
 1. Copy `advanced-search-filter-brandon.php` and `asfb-styles.css` into the `wp-content/plugins` directory of your WordPress installation.
 2. Activate the **Advanced Search and Filter - Brandon** plugin from the WordPress admin.
 3. Visit **Settings > Advanced Search & Filter - Brandon** to choose the post type and select which custom fields should appear in results. The available meta keys are listed with checkboxes so you can pick which values are displayed in the result grid.
+4. The settings page also includes checkboxes for which search fields (name, zip code, radius and state) should be visible in the search form. By default only the zip code and radius fields are enabled.
 
 ## Usage
 
