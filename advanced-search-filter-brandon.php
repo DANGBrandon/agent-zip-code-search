@@ -32,9 +32,12 @@ class ASF_Brandon_Plugin {
     public function settings_page() {
         $options = get_option( $this->option_name );
         $post_types = get_post_types( [ 'public' => true ], 'objects' );
+
         $selected_type = $options['post_type'] ?? key( $post_types );
         $available_meta = $this->get_meta_keys( $selected_type );
         $selected_fields = is_array( $options['fields'] ?? '' ) ? $options['fields'] : [];
+=======
+
         ?>
         <div class="wrap">
             <h1>Advanced Search &amp; Filter - Brandon</h1>
@@ -52,6 +55,7 @@ class ASF_Brandon_Plugin {
                         </td>
                     </tr>
                     <tr>
+
                         <th scope="row">Fields to Display</th>
                         <td>
                             <?php if ( empty( $available_meta ) ) : ?>
@@ -64,6 +68,11 @@ class ASF_Brandon_Plugin {
                                     </label>
                                 <?php endforeach; ?>
                             <?php endif; ?>
+=======
+                        <th scope="row"><label for="fields">Fields to Display (comma separated meta keys)</label></th>
+                        <td>
+                            <input type="text" name="<?php echo $this->option_name; ?>[fields]" value="<?php echo esc_attr( $options['fields'] ?? '' ); ?>" class="regular-text" />
+
                         </td>
                     </tr>
                 </table>
@@ -102,7 +111,11 @@ class ASF_Brandon_Plugin {
     public function results_shortcode( $atts ) {
         $options = get_option( $this->option_name );
         $post_type = $options['post_type'] ?? 'post';
+
         $fields = is_array( $options['fields'] ?? '' ) ? array_map( 'trim', $options['fields'] ) : [];
+=======
+        $fields = array_map( 'trim', explode( ',', $options['fields'] ?? '' ) );
+
         $paged = max( 1, intval( $_GET['paged'] ?? 1 ) );
         $args = [
             'post_type' => $post_type,
@@ -182,6 +195,7 @@ class ASF_Brandon_Plugin {
                 if ( has_post_thumbnail( $post_id ) ) {
                     echo get_the_post_thumbnail( $post_id, 'medium' );
                 }
+
                 foreach ( $fields as $field ) {
                     $value = get_post_meta( $post_id, $field, true );
                     if ( is_array( $value ) ) {
@@ -189,6 +203,16 @@ class ASF_Brandon_Plugin {
                     }
                     echo '<p>' . esc_html( $value ) . '</p>';
                 }
+=======
+                $first = get_post_meta( $post_id, 'wpcf-first-name', true );
+                $middle = get_post_meta( $post_id, 'wpcf-middle-name', true );
+                $last = get_post_meta( $post_id, 'wpcf-last-name', true );
+                $email = get_post_meta( $post_id, 'wpcf-email', true );
+                $phone = get_post_meta( $post_id, 'wpcf-phone', true );
+                echo '<p>' . esc_html( trim( "$first $middle $last" ) ) . '</p>';
+                echo '<p>' . esc_html( $email ) . '</p>';
+                echo '<p>' . esc_html( $phone ) . '</p>';
+
                 echo '</div>';
             }
             echo '</div>';
@@ -237,6 +261,7 @@ class ASF_Brandon_Plugin {
         return $earth_radius * $c;
     }
 
+
     private function get_meta_keys( $post_type ) {
         global $wpdb;
         $sql = $wpdb->prepare(
@@ -245,6 +270,8 @@ class ASF_Brandon_Plugin {
         );
         return $wpdb->get_col( $sql );
     }
+
+=======
 
     private function get_states() {
         return [
@@ -311,4 +338,8 @@ function asfb_enqueue_styles() {
     wp_enqueue_style( 'asfb-styles', plugin_dir_url( __FILE__ ) . 'asfb-styles.css' );
 }
 add_action( 'wp_enqueue_scripts', 'asfb_enqueue_styles' );
+
+
+=======
+?>
 
