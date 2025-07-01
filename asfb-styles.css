@@ -1,0 +1,15 @@
+.asfb-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.asfb-item {
+    width: calc(20% - 20px);
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+.asfb-item img {
+    max-width: 100%;
+    height: auto;
+}
