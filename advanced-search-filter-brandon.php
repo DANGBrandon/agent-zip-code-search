@@ -2,10 +2,12 @@
 /**
  * Plugin Name: Advanced Search and Filter - Brandon
  * Description: Provides advanced search functionality across Toolset custom post types.
+
  * Plugin URI: https://example.com/advanced-search-filter-brandon
- * Version: 0.1.2
- * Author: Brandon
- * Author URI: https://example.com
+ * Version: 2.2.1
+ * Author: DANG Brandon
+ * Author URI: https://dangdesigns.com
+
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -34,10 +36,12 @@ class ASF_Brandon_Plugin {
     public function settings_page() {
         $options = get_option( $this->option_name );
         $post_types = get_post_types( [ 'public' => true ], 'objects' );
+
         $selected_type = $options['post_type'] ?? key( $post_types );
         $available_meta = $this->get_meta_keys( $selected_type );
         $selected_fields = is_array( $options['fields'] ?? '' ) ? $options['fields'] : [];
         $search_fields   = is_array( $options['search_fields'] ?? '' ) ? $options['search_fields'] : ['zip','radius'];
+
         ?>
         <div class="wrap">
             <h1>Advanced Search &amp; Filter - Brandon</h1>
@@ -55,6 +59,7 @@ class ASF_Brandon_Plugin {
                         </td>
                     </tr>
                     <tr>
+
                         <th scope="row">Fields to Display</th>
                         <td>
                             <?php if ( empty( $available_meta ) ) : ?>
@@ -67,6 +72,7 @@ class ASF_Brandon_Plugin {
                                     </label>
                                 <?php endforeach; ?>
                             <?php endif; ?>
+
                         </td>
                     </tr>
                     <tr>
@@ -85,6 +91,7 @@ class ASF_Brandon_Plugin {
                                     <?php echo esc_html( $label ); ?>
                                 </label>
                             <?php endforeach; ?>
+
                         </td>
                     </tr>
                 </table>
@@ -123,6 +130,7 @@ class ASF_Brandon_Plugin {
                     <?php endforeach; ?>
                 </select>
             <?php endif; ?>
+
             <button type="submit">Search</button>
             <a href="<?php echo esc_url( remove_query_arg( [ 'asfb_name', 'asfb_zip', 'asfb_radius', 'asfb_state', 'paged' ] ) ); ?>">Clear All</a>
         </form>
@@ -133,6 +141,7 @@ class ASF_Brandon_Plugin {
     public function results_shortcode( $atts ) {
         $options = get_option( $this->option_name );
         $post_type = $options['post_type'] ?? 'post';
+
         $fields = is_array( $options['fields'] ?? '' ) ? array_map( 'trim', $options['fields'] ) : [];
         $paged = max( 1, intval( $_GET['paged'] ?? 1 ) );
         $args = [
@@ -220,6 +229,7 @@ class ASF_Brandon_Plugin {
                     }
                     echo '<p>' . esc_html( $value ) . '</p>';
                 }
+
                 echo '</div>';
             }
             echo '</div>';
